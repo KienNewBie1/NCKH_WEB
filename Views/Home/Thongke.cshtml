@@ -2,6 +2,8 @@
     ViewBag.Title = "Thống kê thiết bị";
     Layout = "~/Views/Shared/_LayoutHome.cshtml"; // nếu bạn có layout
     int stt=1;
+    int stt2 = 1;
+    int stt3 = 1;
 }
 
 <h2>📊 Tổng số lần sửa chữa của từng thiết bị theo tháng</h2>
@@ -19,7 +21,7 @@
         {
             <tr>
                 <td>@stt</td>
-                <td>@row["id_device"]</td>
+                <td>@row["name"]</td>
                 <td>@row["repair_month"]</td>
                 <td>@row["total_repairs"]</td>
             </tr>
@@ -41,38 +43,16 @@
         @foreach (System.Data.DataRow row in ViewBag.TrungBinhSuaTungThietBi.Rows)
         {
             <tr>
-                <td>@stt</td>
-                <td>@row["id_device"]</td>
+                <td>@stt2</td>
+                <td>@row["name"]</td>
                 <td>@row["avg_time_formatted"]</td>
             </tr>
-        stt++;
+        stt2++;
         }
     </tbody>
 </table>
 
-<h2>📆 Số lần sửa chữa thành công theo tháng</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>STT</th>
-            <th>Tên thiết bị</th>
-            <th>Tháng sửa</th>
-            <th>Số lần sửa</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (System.Data.DataRow row in ViewBag.SoLanSuaTrongThang.Rows)
-        {
-            <tr>
-                <td>@stt</td>
-                <td>@row["name"]</td>
-                <td>@row["repair_month"]</td>
-                <td>@row["successful_repairs"]</td>
-            </tr>
-        stt++;
-        }
-    </tbody>
-</table>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <h3>Biểu đồ: Tổng số lần sửa chữa theo tháng</h3>
 <canvas id="barChart" width="800" height="400"></canvas>

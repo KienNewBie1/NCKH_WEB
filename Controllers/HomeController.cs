@@ -277,8 +277,9 @@ namespace NCKH.Controllers
 
                 // 1. Tổng số lần sửa chữa theo tháng của từng thiết bị
                 string query1 = @"
-                SELECT id_device, DATE_FORMAT(time_repair, '%Y-%m') AS repair_month, COUNT(id_device) AS total_repairs 
-                FROM report 
+                SELECT id_device,d.name, DATE_FORMAT(time_repair, '%Y-%m') AS repair_month, COUNT(id_device) AS total_repairs 
+                FROM report r
+                JOIN device d ON r.id_device = d.id
                 WHERE time_report IS NOT NULL AND time_repair IS NOT NULL AND id_group IS NOT NULL 
                 GROUP BY id_device, repair_month 
                 ORDER BY repair_month, id_device;";
@@ -291,14 +292,15 @@ namespace NCKH.Controllers
 
                 // 2. Thời gian sửa chữa trung bình của từng thiết bị
                 string query2 = @"
-                SELECT id_device,
+                SELECT id_device,d.name,
                        AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) AS avg_minutes,
                        CASE 
                            WHEN AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) < 1440 
                            THEN CONCAT(ROUND(AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) / 60, 2), ' giờ') 
                            ELSE CONCAT(ROUND(AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) / 1440, 2), ' ngày') 
                        END AS avg_time_formatted
-                FROM report 
+                FROM report r
+                JOIN device d ON r.id_device = d.id
                 WHERE time_report IS NOT NULL AND time_repair IS NOT NULL 
                 GROUP BY id_device;";
 
