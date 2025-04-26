@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Data;
 using System.IO;
 using System.Web.Mvc;
-using System.Data;
-using BarcodeStandard;
-using SkiaSharp;
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
 using NCKH.Models;
 
 namespace NCKH.Controllers
@@ -18,32 +19,38 @@ namespace NCKH.Controllers
             if (device == null || device.Rows.Count == 0)
                 return HttpNotFound();
 
-            // Tạo mã vạch
-            Barcode barcode = new Barcode
-            {
-                IncludeLabel = true,
-                Alignment = AlignmentPositions.Center
-            };
+            string deviceCode = device.Rows[0]["name"].ToString();
+            string baseUrl = Request.Url.GetLeftPart(UriPartial.Authority);
+            string fullUrl = baseUrl + Url.Action("ShowDeviceInfo", "Device", new { deviceCode = deviceCode });
 
-            string code = device.Rows[0]["device_code"].ToString();
-
-            using (SKImage image = barcode.Encode(
-                BarcodeStandard.Type.Code128,
-                code,
-                SKColors.Black,
-                SKColors.White,
-                300,
-                100))
-            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-            using (var ms = new MemoryStream())
+            // -- Dùng QRCoder để tạo QRCode --
+            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
             {
-                data.SaveTo(ms);
-                string base64 = Convert.ToBase64String(ms.ToArray());
-                ViewBag.BarcodeImage = "data:image/png;base64," + base64;
+                QRCodeData qrCodeData = qrGenerator.CreateQrCode(deviceCode, QRCodeGenerator.ECCLevel.Q);
+                using (QRCode qrCode = new QRCode(qrCodeData))
+                {
+                    using (Bitmap qrCodeImage = qrCode.GetGraphic(20))
+                    {
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            qrCodeImage.Save(ms, ImageFormat.Png);
+                            string base64 = Convert.ToBase64String(ms.ToArray());
+                            ViewBag.BarcodeImage = "data:image/png;base64," + base64;
+                        }
+                    }
+                }
             }
 
             return View(device);
         }
 
+        public ActionResult ShowDeviceInfo(string deviceCode)
+        {
+            DataTable device = dbHelper.GetDeviceInfoByCode(deviceCode);
+            if (device == null || device.Rows.Count == 0)
+                return HttpNotFound();
+
+            return View(device);
+        }
     }
 }

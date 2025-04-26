@@ -29,7 +29,7 @@ namespace NCKH.Models
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
-                string query = @"SELECT * FROM `device`WHERE id = @id";
+                string query = @"SELECT * FROM `device` WHERE id = @id";
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", id);
@@ -41,6 +41,28 @@ namespace NCKH.Models
             }
             return dt;
         }
+
+
+        public DataTable GetDeviceInfoByCode(string code)
+        {
+            string query = "SELECT id, name, status, id_room, device_code FROM device WHERE device_code = @code";
+
+            using (MySqlConnection conn = GetConnection())
+            {
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@code", code);
+
+                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
+                    {
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+                        return dt;
+                    }
+                }
+            }
+        }
+
 
         // lấy danh sách reports
         public DataTable getReport()

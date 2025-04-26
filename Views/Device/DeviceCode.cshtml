@@ -2,7 +2,6 @@
 
 @{
     ViewBag.Title = "Mã thiết bị";
-    
 }
 
 <h2>Thông tin thiết bị</h2>
@@ -34,16 +33,21 @@
         </tr>
     </table>
 
-    <h3>Mã vạch của thiết bị</h3>
+    <h3>Mã QR của thiết bị</h3>
 
-        if (ViewBag.BarcodeImage != null)
-        {
-            <img src="@ViewBag.BarcodeImage" alt="Barcode" />
-        }
-        else
-        {
-            <p>Không thể tạo mã vạch.</p>
-        }
+    if (ViewBag.BarcodeImage != null)
+    {
+        <img src="@ViewBag.BarcodeImage" alt="QRCode" style="margin-bottom:10px; width:250px;" />
+        <br />
+        <!-- Link giả lập hành vi quét QR -->
+        <a href="@Url.Action("ShowDeviceInfo", "Device", new { deviceCode = device["device_code"] })" class="btn btn-primary">
+            Quét mã → Xem thông tin thiết bị
+        </a>
+    }
+    else
+    {
+        <p>Không thể tạo mã QR.</p>
+    }
 }
 else
 {
