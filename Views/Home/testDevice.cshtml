@@ -19,6 +19,7 @@
             <th>Trạng Thái</th>
             <th>Tên Phòng</th>
             <th>Dãy</th>
+            <th>Mã Vạch</th>
             <th>Hành Động</th>
         </tr>
     </thead>
@@ -31,6 +32,9 @@
                 <td>@row["status"]</td>
                 <td>@row["room_name"]</td>
                 <td>@row["area_name"]</td>
+                <td>
+                    <a href="@Url.Action("DeviceCode", "Device", new { id = row["device_id"] })" class="btn btn-secondary">Xem mã vạch</a>
+                </td>
                 <td>
                     <a href="@Url.Action("DeleteDevice", "Home", new { id = row["device_id"] })" class="btn btn-danger">Xóa</a>
                 </td>

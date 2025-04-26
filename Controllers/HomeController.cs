@@ -23,7 +23,6 @@ namespace NCKH.Controllers
         // dùng ngay trong Layout kh cần tách nhỏ partialView
         protected override void OnActionExecuting(ActionExecutingContext allprint)
         {
-            // Ensure dbHelper is initialized before use
             ViewData["Reports"] = dbHelper.GetUnassignedReports();
             ViewBag.ReportCount = dbHelper.GetReportCount();
 
@@ -67,18 +66,13 @@ namespace NCKH.Controllers
                 ViewBag.ErrorMessage = "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!";
                 return View();
             }
-
-            // Gọi method Login từ dbHelper (đã sửa để kiểm tra cả username và password)
             if (dbHelper.Login(username, password))
             {
                 Session["name"] = username;
-
-                // Chuyển về trang "main" (bạn có thể thay controller nếu cần)
                 return RedirectToAction("main", "Home");
             }
             else
             {
-                // Sai thông tin
                 ViewBag.ErrorMessage = "Sai tên đăng nhập hoặc mật khẩu!";
                 return View();
             }
@@ -269,5 +263,77 @@ namespace NCKH.Controllers
             dbHelper.DeleteDevice(id);
             return RedirectToAction("testDevice");
         }
+       
+        public ActionResult ThongKe()
+        {
+            string connStr = "server=localhost;database=device_management;user=root;password=;port=3306;";
+            DataTable ThongKeSoLanSuaChua = new DataTable();
+            DataTable TrungBinhSuaTungThietBi = new DataTable();
+            DataTable SoLanSuaTrongThang = new DataTable();
+
+            using (MySqlConnection db = new MySqlConnection(connStr))
+            {
+                db.Open();
+
+                // 1. Tổng số lần sửa chữa theo tháng của từng thiết bị
+                string query1 = @"
+                SELECT id_device, DATE_FORMAT(time_repair, '%Y-%m') AS repair_month, COUNT(id_device) AS total_repairs 
+                FROM report 
+                WHERE time_report IS NOT NULL AND time_repair IS NOT NULL AND id_group IS NOT NULL 
+                GROUP BY id_device, repair_month 
+                ORDER BY repair_month, id_device;";
+
+                using (MySqlCommand cmd = new MySqlCommand(query1, db))
+                using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
+                {
+                    adapter.Fill(ThongKeSoLanSuaChua);
+                }
+
+                // 2. Thời gian sửa chữa trung bình của từng thiết bị
+                string query2 = @"
+                SELECT id_device,
+                       AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) AS avg_minutes,
+                       CASE 
+                           WHEN AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) < 1440 
+                           THEN CONCAT(ROUND(AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) / 60, 2), ' giờ') 
+                           ELSE CONCAT(ROUND(AVG(TIMESTAMPDIFF(MINUTE, time_report, time_repair)) / 1440, 2), ' ngày') 
+                       END AS avg_time_formatted
+                FROM report 
+                WHERE time_report IS NOT NULL AND time_repair IS NOT NULL 
+                GROUP BY id_device;";
+
+                using (MySqlCommand cmd = new MySqlCommand(query2, db))
+                using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
+                {
+                    adapter.Fill(TrungBinhSuaTungThietBi);
+                }
+
+                // 3. Thống kê số lần sửa trong tháng theo thiết bị
+                string query3 = @"
+                SELECT d.name, DATE_FORMAT(time_report, '%Y-%m') AS repair_month, COUNT(*) AS successful_repairs 
+                FROM report r 
+                JOIN device d ON r.id_device = d.id 
+                WHERE time_report IS NOT NULL AND time_repair IS NOT NULL AND id_group IS NOT NULL
+                GROUP BY id_device, repair_month 
+                ORDER BY repair_month, id_device;";
+
+                using (MySqlCommand cmd = new MySqlCommand(query3, db))
+                using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
+                {
+                    adapter.Fill(SoLanSuaTrongThang);
+                }
+
+                db.Close();
+            }
+
+            // Truyền dữ liệu sang View bằng ViewBag
+            ViewBag.ThongKeSoLanSuaChua = ThongKeSoLanSuaChua;
+            ViewBag.TrungBinhSuaTungThietBi = TrungBinhSuaTungThietBi;
+            ViewBag.SoLanSuaTrongThang = SoLanSuaTrongThang;
+
+            return View();
+        }
     }
+
+
 }

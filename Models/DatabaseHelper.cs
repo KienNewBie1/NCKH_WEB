@@ -22,6 +22,26 @@ namespace NCKH.Models
         {
             return new MySqlConnection(connectionString);
         }
+
+        public DataTable GetDeviceCode(int id)
+        {
+            DataTable dt = new DataTable();
+            using (MySqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                string query = @"SELECT * FROM `device`WHERE id = @id";
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
+                    {
+                        adapter.Fill(dt);
+                    }
+                }
+            }
+            return dt;
+        }
+
         // lấy danh sách reports
         public DataTable getReport()
 		{
@@ -30,20 +50,20 @@ namespace NCKH.Models
             {
                 conn.Open();
                 string query = @"SELECT 
-                                    r.id, 
-                                    d.name AS device_name, 
-                                    rm.name AS room_name, 
-                                    a.name AS area_name, 
-                                    r.description, 
-                                    r.time_repair, 
-                                    g.name AS name_group
-                                FROM report r 
-                                JOIN device d ON r.id_device = d.id 
-                                JOIN room rm ON d.id_room = rm.id 
-                                JOIN area a ON rm.id_area = a.id 
-                                JOIN `group` g ON r.id_group = g.id
-                                WHERE r.time_repair IS NOT NULL;
-                                ";
+                    r.id, 
+                    d.name AS device_name, 
+                    rm.name AS room_name, 
+                    a.name AS area_name, 
+                    r.description, 
+                    r.time_repair, 
+                    g.name AS name_group
+                FROM report r 
+                JOIN device d ON r.id_device = d.id 
+                JOIN room rm ON d.id_room = rm.id 
+                JOIN area a ON rm.id_area = a.id 
+                JOIN `group` g ON r.id_group = g.id
+                WHERE r.time_repair IS NOT NULL;
+                ";
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
